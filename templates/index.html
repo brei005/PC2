@@ -1,0 +1,147 @@
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #canvas-container {
+            text-align: center;
+            margin-top: 50px;
+        }
+        #myCanvas {
+            border: 2px solid black;
+            cursor: crosshair; /* Cambia el cursor a una cruz */
+        }
+        #mensaje {
+            font-size: 24px;
+        }
+        #clear-button,
+        #erase-button,
+        #submit-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+        }
+        #clear-button {
+            background-color: #ff3333;
+            color: white;
+        }
+        #erase-button {
+            background-color: #ffcc00;
+            color: black;
+        }
+        #submit-button {
+            background-color: #3399ff;
+            color: white;
+        }
+    </style>
+</head>
+<body onload="InitThis();">
+    <div id="canvas-container">
+        <h1 id="mensaje">Dibujando...</h1>
+        <canvas id="myCanvas" width="300" height="300"></canvas>
+        <br/>
+        <button id="clear-button" onclick="javascript:clearArea();return false;">Borrar</button>
+        <button id="erase-button" onclick="javascript:toggleEraseMode();return false;">Borrador</button>
+    </div>
+    <div align="center">
+        <form method="post" action="upload" onsubmit="javascript:prepareImg();" enctype="multipart/form-data">
+            <input id="shape" name="shape" type="hidden" value="">
+            <input id="myImage" name="myImage" type="hidden" value="">
+    
+            <!-- Nuevo selector para elegir el integrante -->
+            <label for="integrante">Selecciona tu nombre:</label>
+            <select id="integrante" name="integrante">
+                <option value="integrante1">Integrante 1</option>
+                <option value="integrante2">Integrante 2</option>
+                <option value="integrante3">Integrante 3</option>
+            </select>
+    
+            <input id="submit-button" type="submit" value="Enviar">
+        </form>
+        <a href="/predict"><button id="predict-button">Predecir</button></a>
+    </div>
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+    <script>
+        var mousePressed = false;
+        var eraseMode = false; // Variable para controlar el modo de borrado
+        var lastX, lastY;
+        var ctx;
+
+        function InitThis() {
+            ctx = document.getElementById('myCanvas').getContext("2d");
+
+            // Cambiar los nombres de las formas
+            var shapes = {
+                "flor": "Flor", 
+                "casa": "Casa", 
+                "auto": "Auto"
+            };
+
+            // Seleccionar una forma aleatoriamente
+            var keys = Object.keys(shapes);
+            var random = Math.floor(Math.random() * keys.length);
+            var shape = keys[random];
+
+            // Mostrar mensaje con el nombre de la forma
+            document.getElementById('mensaje').innerHTML = 'Dibujando una ' + shapes[shape];
+            document.getElementById('shape').value = shape; // Cambiar el valor del campo oculto
+
+            $('#myCanvas').mousedown(function (e) {
+                mousePressed = true;
+                Draw(e.pageX - $(this).offset().left, e.pageY - $(this).offset().top, false);
+            });
+
+            $('#myCanvas').mousemove(function (e) {
+                if (mousePressed) {
+                    Draw(e.pageX - $(this).offset().left, e.pageY - $(this).offset().top, true);
+                }
+            });
+
+            $('#myCanvas').mouseup(function (e) {
+                mousePressed = false;
+            });
+            $('#myCanvas').mouseleave(function (e) {
+                mousePressed = false;
+            });
+        }
+
+        function Draw(x, y, isDown) {
+            if (eraseMode) { // Si estamos en modo de borrado, usamos un color blanco para borrar
+                ctx.strokeStyle = 'white';
+            } else {
+                ctx.strokeStyle = 'black';
+            }
+
+            if (isDown) {
+                ctx.beginPath();
+                ctx.lineWidth = 11;
+                ctx.lineJoin = "round";
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(x, y);
+                ctx.closePath();
+                ctx.stroke();
+            }
+            lastX = x; lastY = y;
+        }
+
+        function clearArea() {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        }
+
+        function toggleEraseMode() {
+            eraseMode = !eraseMode; // Cambiar el modo de borrado
+            var eraseButton = document.getElementById('erase-button');
+            eraseButton.innerHTML = eraseMode ? 'Pincel' : 'Borrador';
+        }
+
+        function prepareImg() {
+            var canvas = document.getElementById('myCanvas');
+            document.getElementById('myImage').value = canvas.toDataURL();
+        }
+    </script>
+</body>
+</html>
